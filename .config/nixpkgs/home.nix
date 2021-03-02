@@ -9,11 +9,21 @@
 
   home.stateVersion = "21.05";
 
+  programs.direnv = {
+    enable = true;
+    enableBashIntegration = true;
+    enableNixDirenvIntegration = true;
+  };
+  
   programs.emacs.enable = true;
 
   home.packages = [
+    pkgs.iosevka-bin
+    pkgs.multimarkdown
     pkgs.yadm
   ];
+
+  fonts.fontconfig.enable = true;
 
   programs.git = {
     enable = true;
