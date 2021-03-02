@@ -10,6 +10,7 @@
     packages = [
       pkgs.iosevka-bin
       pkgs.multimarkdown
+      pkgs.nixFlakes
       pkgs.yadm
     ];
 
