@@ -2,8 +2,8 @@
 
 {
   home = {
-    username = "wsl";
-    homeDirectory = "/home/wsl";
+    username = "romain";
+    homeDirectory = "/home/romain";
     
     stateVersion = "21.05";
 
