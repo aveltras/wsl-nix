@@ -41,10 +41,11 @@
 (global-hl-line-mode 1)
 (global-auto-revert-mode)
 
-(add-to-list 'default-frame-alist '(font . "Iosevka-15"))
+(add-to-list 'default-frame-alist '(font . "Iosevka-18"))
 (setq-default left-margin-width 1 right-margin-width 1)
 (setq-default line-spacing 1)
 (setq header-line-format " ")
+(setq dired-listing-switches "-lXGh --group-directories-first")
 
 (global-set-key (kbd "C-x é") 'split-window)
 (global-set-key (kbd "C-x \"") 'split-window-horizontally)
@@ -67,18 +68,10 @@
 
 (global-set-key (kbd "C-<tab>") 'my/switch-to-last-buffer)
 
-(defun my/treemacs-back-and-forth ()
+(defun my/dired-subtree-toggle ()
   (interactive)
-  (if (treemacs-is-treemacs-window-selected?)
-      (progn
-	(aw-flip-window)
-	(treemacs))
-    (treemacs-select-window)))
-
-(defun my/treemacs-visit-node-and-close (&optional arg)
-  "Visit node and hide treemacs window."
-  (funcall-interactively treemacs-default-visit-action arg)
-  (treemacs))
+  (dired-subtree-toggle)
+  (revert-buffer))
 
 ;; Third party packages
 
@@ -89,6 +82,9 @@
   :config
   (unless (find-font (font-spec :name "all-the-icons"))
     (all-the-icons-install-fonts t)))
+
+(use-package all-the-icons-dired
+  :hook (dired-mode . all-the-icons-dired-mode))
 
 (use-package all-the-icons-ivy-rich
   :init (all-the-icons-ivy-rich-mode 1))
@@ -130,6 +126,10 @@
   :config
   (counsel-projectile-mode 1))
 
+(use-package dired-subtree
+  :bind (:map dired-mode-map
+	      ("<tab>" . 'my/dired-subtree-toggle)))
+
 (use-package direnv
   :config (direnv-mode))
 
@@ -141,7 +141,7 @@
 
   ;; Enable flashing mode-line on errors
   (doom-themes-visual-bell-config)
-  (setq doom-themes-treemacs-enable-variable-pitch nil)
+  ;; (setq doom-themes-treemacs-enable-variable-pitch nil)
 
   ;; (setq doom-themes-treemacs-theme "doom-colors") ; use the colorful treemacs theme
   ;; (doom-themes-treemacs-config)
@@ -199,11 +199,20 @@
 (use-package lsp-mode
   :commands (lsp lsp-deferred)
   :hook (before-save . lsp-format-buffer)
-  :config (setq lsp-modeline-diagnostics-scope :project))
+  :config (setq lsp-modeline-diagnostics-scope :project)
+  :custom
+  (lsp-rust-analyzer-cargo-watch-command "clippy")
+  (lsp-eldoc-render-all t)
+  (lsp-idle-delay 0.6)
+  (lsp-rust-analyzer-server-display-inlay-hints t))
 
 (use-package lsp-ui
   :config (global-set-key (kbd "M-p") 'lsp-ui-sideline-apply-code-actions)
-  :commands lsp-ui-mode)
+  :commands lsp-ui-mode
+  :custom
+  (lsp-ui-peek-always-show t)
+  (lsp-ui-sideline-show-hover t)
+  (lsp-ui-doc-enable nil))
 
 (use-package lsp-ivy
   :after counsel
@@ -233,34 +242,19 @@
   (projectile-mode +1)
   (setq projectile-project-search-path '("~/Code")))
 
+(use-package rainbow-mode)
+
 (use-package restclient)
+
+(use-package rustic
+  :config
+  (setq rustic-format-on-save t))
 
 (use-package sql-indent
   :hook (sql-mode . sqlind-minor-mode))
 
 (use-package solaire-mode
   :hook (after-init . solaire-global-mode))
-
-(use-package treemacs
-  :config
-  (setq aw-ignored-buffers (delq 'treemacs-mode aw-ignored-buffers))
-  (treemacs-define-RET-action 'file-node-closed 'my/treemacs-visit-node-and-close)
-  (add-to-list 'treemacs-pre-file-insert-predicates #'treemacs-is-file-git-ignored?)
-  (setq treemacs-read-string-input 'from-minibuffer)
-
-  (defun treemacs-ignore-example (filename absolute-path)
-    (or (string-match-p (regexp-quote "node_modules") absolute-path))
-    (or (string-match-p (regexp-quote ".state") absolute-path)))
-
-  (add-to-list 'treemacs-ignored-file-predicates #'treemacs-ignore-example)
-  :bind (:map global-map
-	      ("M-²" . #'my/treemacs-back-and-forth)))
-
-(use-package treemacs-projectile
-  :after treemacs projectile)
-
-(use-package treemacs-magit
-  :after treemacs magit)
 
 (use-package typescript-mode)
 
@@ -295,4 +289,5 @@
 (use-package yaml-mode)
 
 (use-package yasnippet
-  :hook (prog-mode . yas-minor-mode))
+  :hook (prog-mode . yas-minor-mode)
+  :config (yas-reload-all))
