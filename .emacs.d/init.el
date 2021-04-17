@@ -41,11 +41,11 @@
 (global-hl-line-mode 1)
 (global-auto-revert-mode)
 
-(add-to-list 'default-frame-alist '(font . "Iosevka-18"))
+(add-to-list 'default-frame-alist '(font . "Iosevka-16"))
 (setq-default left-margin-width 1 right-margin-width 1)
-(setq-default line-spacing 1)
+(setq-default line-spacing 5)
 (setq header-line-format " ")
-(setq dired-listing-switches "-lXGh --group-directories-first")
+(setq dired-listing-switches "-laXGh --group-directories-first")
 
 (global-set-key (kbd "C-x é") 'split-window)
 (global-set-key (kbd "C-x \"") 'split-window-horizontally)
@@ -66,12 +66,20 @@
   (interactive)
   (switch-to-buffer nil))
 
-(global-set-key (kbd "C-<tab>") 'my/switch-to-last-buffer)
-
 (defun my/dired-subtree-toggle ()
   (interactive)
   (dired-subtree-toggle)
   (revert-buffer))
+
+(defun my/treemacs-back-and-forth ()
+  (interactive)
+  (if (treemacs-is-treemacs-window-selected?)
+      (progn
+	(aw-flip-window)
+	(treemacs))
+    (treemacs-select-window)))
+
+(global-set-key (kbd "C-<tab>") 'my/switch-to-last-buffer)
 
 ;; Third party packages
 
@@ -133,21 +141,21 @@
 (use-package direnv
   :config (direnv-mode))
 
-(use-package doom-themes
-  :config
-  ;; Global settings (defaults)
-  (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
-	doom-themes-enable-italic t) ; if nil, italics is universally disabled
+;; (use-package doom-themes
+;;   :config
+;;   ;; Global settings (defaults)
+;;   (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
+;; 	doom-themes-enable-italic t) ; if nil, italics is universally disabled
 
-  ;; Enable flashing mode-line on errors
-  (doom-themes-visual-bell-config)
-  ;; (setq doom-themes-treemacs-enable-variable-pitch nil)
+;;   ;; Enable flashing mode-line on errors
+;;   (doom-themes-visual-bell-config)
+;;   (setq doom-themes-treemacs-enable-variable-pitch nil)
 
-  ;; (setq doom-themes-treemacs-theme "doom-colors") ; use the colorful treemacs theme
-  ;; (doom-themes-treemacs-config)
-
-  ;; Corrects (and improves) org-mode's native fontification.
-  (doom-themes-org-config))
+;;   ;; (setq doom-themes-treemacs-theme "doom-colors") ; use the colorful treemacs theme
+;;   ;; (doom-themes-treemacs-config)
+;;   ;; (load-theme 'doom-homage-white t)
+;;   ;; Corrects (and improves) org-mode's native fontification.
+;;   (doom-themes-org-config))
 
 (use-package doom-modeline
   :hook (after-init . doom-modeline-mode)
@@ -193,7 +201,7 @@
   (haskell-literate-mode . lsp)
   :config
   (setq lsp-haskell-formatting-provider "ormolu")
-  (setq lsp-haskell-server-path "haskell-language-server")
+  (setq lsp-haskell-server-path "haskell-language-server-wrapper")
   (setq lsp-haskell-process-args-hie '()))
 
 (use-package lsp-mode
@@ -255,6 +263,33 @@
 
 (use-package solaire-mode
   :hook (after-init . solaire-global-mode))
+
+(use-package terraform-mode)
+
+(use-package treemacs
+  :bind (:map global-map ("M-²" . 'my/treemacs-back-and-forth)))
+  :config
+  (setq aw-ignored-buffers (delq 'treemacs-mode aw-ignored-buffers))
+  
+  (defun treemacs-visit-node-and-close (&optional arg)
+    "Visit node and hide treemacs window."
+    (funcall-interactively treemacs-default-visit-action arg)
+    (treemacs))
+
+  (treemacs-define-RET-action 'file-node-closed 'treemacs-visit-node-and-close)
+  (add-to-list 'treemacs-pre-file-insert-predicates #'treemacs-is-file-git-ignored?)
+  (setq treemacs-read-string-input 'from-minibuffer)
+
+  (defun treemacs-ignore-example (filename absolute-path)
+    (or (string-match-p (regexp-quote "node_modules") absolute-path)))
+
+  (add-to-list 'treemacs-ignored-file-predicates #'treemacs-ignore-example)
+
+(use-package treemacs-magit
+  :after treemacs magit)
+
+(use-package treemacs-projectile
+  :after treemacs projectile)
 
 (use-package typescript-mode)
 

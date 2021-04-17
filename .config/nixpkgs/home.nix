@@ -8,9 +8,10 @@
     stateVersion = "21.05";
 
     packages = [
+      pkgs.haskellPackages.implicit-hie
       pkgs.iosevka-bin
       pkgs.multimarkdown
-      pkgs.nixFlakes
+      pkgs.ormolu
       pkgs.yadm
     ];
 
