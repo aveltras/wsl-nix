@@ -145,7 +145,7 @@
   :config
   ;; Global settings (defaults)
   (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
-	doom-themes-enable-italic t) ; if nil, italics is universally disabled
+	doom-themes-enable-italic nil) ; if nil, italics is universally disabled
 
   ;; Enable flashing mode-line on errors
   (doom-themes-visual-bell-config)
@@ -153,7 +153,8 @@
 
   ;; (setq doom-themes-treemacs-theme "doom-colors") ; use the colorful treemacs theme
   ;; (doom-themes-treemacs-config)
-  (load-theme 'doom-gruvbox t)
+  ;; (setq doom-gruvbox-dark-variant "soft")
+  (load-theme 'doom-miramare t)
   ;; Corrects (and improves) org-mode's native fontification.
   (doom-themes-org-config))
 
