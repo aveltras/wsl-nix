@@ -41,7 +41,7 @@
 (global-hl-line-mode 1)
 (global-auto-revert-mode)
 
-(add-to-list 'default-frame-alist '(font . "Iosevka-16"))
+(add-to-list 'default-frame-alist '(font . "Iosevka-18"))
 (setq-default left-margin-width 1 right-margin-width 1)
 (setq-default line-spacing 5)
 (setq header-line-format " ")
@@ -97,8 +97,8 @@
 (use-package all-the-icons-ivy-rich
   :init (all-the-icons-ivy-rich-mode 1))
 
-(use-package chocolate-theme
-  :config (load-theme 'chocolate t))
+;; (use-package chocolate-theme
+;;   :config (load-theme 'chocolate t))
 
 (use-package company
   :hook (after-init . global-company-mode)
@@ -141,21 +141,21 @@
 (use-package direnv
   :config (direnv-mode))
 
-;; (use-package doom-themes
-;;   :config
-;;   ;; Global settings (defaults)
-;;   (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
-;; 	doom-themes-enable-italic t) ; if nil, italics is universally disabled
+(use-package doom-themes
+  :config
+  ;; Global settings (defaults)
+  (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
+	doom-themes-enable-italic t) ; if nil, italics is universally disabled
 
-;;   ;; Enable flashing mode-line on errors
-;;   (doom-themes-visual-bell-config)
-;;   (setq doom-themes-treemacs-enable-variable-pitch nil)
+  ;; Enable flashing mode-line on errors
+  (doom-themes-visual-bell-config)
+  (setq doom-themes-treemacs-enable-variable-pitch nil)
 
-;;   ;; (setq doom-themes-treemacs-theme "doom-colors") ; use the colorful treemacs theme
-;;   ;; (doom-themes-treemacs-config)
-;;   ;; (load-theme 'doom-homage-white t)
-;;   ;; Corrects (and improves) org-mode's native fontification.
-;;   (doom-themes-org-config))
+  ;; (setq doom-themes-treemacs-theme "doom-colors") ; use the colorful treemacs theme
+  ;; (doom-themes-treemacs-config)
+  (load-theme 'doom-gruvbox t)
+  ;; Corrects (and improves) org-mode's native fontification.
+  (doom-themes-org-config))
 
 (use-package doom-modeline
   :hook (after-init . doom-modeline-mode)
@@ -270,6 +270,7 @@
   :bind (:map global-map ("M-²" . 'my/treemacs-back-and-forth)))
   :config
   (setq aw-ignored-buffers (delq 'treemacs-mode aw-ignored-buffers))
+  (treemacs-resize-icons 26)
   
   (defun treemacs-visit-node-and-close (&optional arg)
     "Visit node and hide treemacs window."
@@ -295,6 +296,12 @@
 
 (use-package undo-tree
   :init (global-undo-tree-mode))
+
+(use-package vterm)
+
+(use-package vterm-toggle
+  :after vterm
+  :config (global-set-key (kbd "M-&") 'vterm-toggle))
 
 (use-package web-mode
   :mode (("\\.js\\'" . web-mode)
