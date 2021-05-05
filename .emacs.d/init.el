@@ -40,12 +40,21 @@
 (fringe-mode 1)
 (global-hl-line-mode 1)
 (global-auto-revert-mode)
+;; (global-tab-line-mode)
 
-(add-to-list 'default-frame-alist '(font . "Iosevka-18"))
+(add-to-list 'default-frame-alist '(font . "Iosevka-16"))
 (setq-default left-margin-width 1 right-margin-width 1)
 (setq-default line-spacing 5)
 (setq header-line-format " ")
-(setq dired-listing-switches "-laXGh --group-directories-first")
+(setq dired-listing-switches "-lAXGhv --group-directories-first")
+
+(setq project-switch-commands
+      '((magit-project-status "Magit" nil)
+	(project-find-file "Find file" nil)
+	(project-find-regexp "Find regexp" nil)
+	(project-dired "Dired" nil)
+	(project-vc-dir "VC-Dir" nil)
+	(project-eshell "Eshell" nil)))
 
 (global-set-key (kbd "C-x é") 'split-window)
 (global-set-key (kbd "C-x \"") 'split-window-horizontally)
@@ -79,7 +88,22 @@
 	(treemacs))
     (treemacs-select-window)))
 
+(defun my/treemacs-visit-node-and-close (&optional arg)
+  "Visit node and hide treemacs window."
+  (funcall-interactively treemacs-default-visit-action arg)
+  (treemacs))
+
 (global-set-key (kbd "C-<tab>") 'my/switch-to-last-buffer)
+
+(defcustom tab-line-tab-min-width 10
+  "Minimum width of a tab in characters."
+  :type 'integer
+  :group 'tab-line)
+
+(defcustom tab-line-tab-max-width 30
+  "Maximum width of a tab in characters."
+  :type 'integer
+  :group 'tab-line)
 
 ;; Third party packages
 
@@ -91,14 +115,8 @@
   (unless (find-font (font-spec :name "all-the-icons"))
     (all-the-icons-install-fonts t)))
 
-(use-package all-the-icons-dired
-  :hook (dired-mode . all-the-icons-dired-mode))
-
 (use-package all-the-icons-ivy-rich
   :init (all-the-icons-ivy-rich-mode 1))
-
-;; (use-package chocolate-theme
-;;   :config (load-theme 'chocolate t))
 
 (use-package company
   :hook (after-init . global-company-mode)
@@ -131,15 +149,37 @@
 
 (use-package counsel-projectile
   :after projectile counsel
-  :config
-  (counsel-projectile-mode 1))
+  :bind ("C-M-²" . counsel-projectile-rg)
+  :config (counsel-projectile-mode 1))
+
+;; (use-package dante
+;;   :after haskell-mode
+;;   :commands 'dante-mode
+;;   :init
+;;   (setq dante-load-flags '("+c"
+;; 			   "-ferror-spans"
+;; 			   "-Wwarn=missing-home-modules"
+;;                            "-fno-diagnostics-show-caret"
+;;                            "-Wall"
+;; 			   "-fobject-code"
+;; 			   "-fbyte-code"
+;; 			   "-fno-break-on-exception"
+;; 			   "-fno-break-on-error"
+;;                            "-fdefer-typed-holes"
+;;                            "-fdefer-type-errors"))
+;;   (add-hook 'haskell-mode-hook 'flycheck-mode)
+;;   (add-hook 'haskell-mode-hook 'dante-mode)
+;;   :config
+;;   (flycheck-add-next-checker 'haskell-dante '(info . haskell-hlint)))
+
+(use-package dired-filter)
 
 (use-package dired-subtree
   :bind (:map dired-mode-map
 	      ("<tab>" . 'my/dired-subtree-toggle)))
 
-(use-package direnv
-  :config (direnv-mode))
+;; (use-package direnv
+;;   :config (direnv-mode))
 
 (use-package doom-themes
   :config
@@ -170,6 +210,13 @@
 (use-package emmet-mode
   :hook (web-mode css-mode html-mode))
 
+(use-package envrc
+  :init (envrc-global-mode))
+
+;; (use-package exec-path-from-shell
+;;   :config
+;;   (exec-path-from-shell-initialize))
+
 (use-package expand-region
   :bind (("C-+" . er/contract-region)
          ("C-=" . er/expand-region)))
@@ -181,20 +228,44 @@
 (use-package haskell-mode
   :config (setq haskell-process-type 'ghci))
 
-(use-package ivy-posframe
-  :config
-  (setq ivy-posframe-display-functions-alist '((t . ivy-posframe-display-at-frame-center)))
-  (ivy-posframe-mode 1))
+;; (use-package ivy-posframe
+;;   :config
+;;   (setq ivy-posframe-display-functions-alist '((t . ivy-posframe-display-at-frame-bottom-left)))
+;;   (ivy-posframe-mode 1))
 
 (use-package ivy-prescient
   :after counsel prescient
-  :config (ivy-prescient-mode))
+  :config
+  (setq ivy-prescient-sort-commands '(:not swiper
+                                           swiper-isearch
+                                           counsel-imenu
+                                           ivy-switch-buffer
+                                           lsp-ivy-workspace-symbol
+                                           ivy-resume
+                                           ivy--restore-session
+                                           counsel-switch-buffer))
+  (ivy-prescient-mode))
 
 (use-package ivy-rich
   :init (ivy-rich-mode 1))
 
 (use-package json-mode
   :config (setq js-indent-level 2))
+
+(use-package ligature
+  :straight '(ligature :type git :host github :repo "mickeynp/ligature.el")
+  :config
+  (ligature-set-ligatures 't '("www"))
+  (ligature-set-ligatures 'prog-mode '("<--" "<---" "<<-" "<-" "<->" "->" "->>" "-->" "--->"
+				       "<!--" "-<<" "-<" "-<-" "->-" ">-" ">>-" "<-->" "<--->"
+				       "<---->" "<==" "<===" "<<=" "<=" "<=>" "=>" "=>>" "==>"
+				       "===>" "<!---" "=<<" "=<" "=<=" "=>=" ">=" ">>=" "<==>"
+				       "<===>" "<====>" "<-------" "------->" "<======>" "<~~"
+				       "<~" "~>" "~~>" "\\/" "/\\" "==" "!=" "/=" "~=" "<>"
+				       "===" "!==" "=/=" "=!=" ":=" ":-" ":+" "<*" "<*>" "*>"
+				       "<|" "<|>" "|>" "+:" "-:" "=:" "::" ":::" "<." "<.>"
+				       ".>" "(*" "*)" ":>" "++" "+++" "|-" "-|"))
+  (global-ligature-mode t))
 
 (use-package lsp-haskell
   :hook
@@ -223,8 +294,14 @@
   (lsp-ui-sideline-show-hover t)
   (lsp-ui-doc-enable nil))
 
+(use-package lsp-treemacs
+  :after lsp-mode
+  :bind ("C-!" . lsp-treemacs-errors-list)
+  :config (lsp-treemacs-sync-mode 1))
+
 (use-package lsp-ivy
   :after counsel
+  :bind ("M-²" . lsp-ivy-workspace-symbol)
   :commands lsp-ivy-workspace-symbol)
 
 (use-package magit
@@ -241,9 +318,6 @@
 
 (use-package prescient
   :config (prescient-persist-mode))
-
-(use-package prettier
-  :hook (after-init . global-prettier-mode))
 
 (use-package projectile
   :config
@@ -267,31 +341,31 @@
 
 (use-package terraform-mode)
 
-(use-package treemacs
-  :bind (:map global-map ("M-²" . 'my/treemacs-back-and-forth)))
-  :config
-  (setq aw-ignored-buffers (delq 'treemacs-mode aw-ignored-buffers))
-  (treemacs-resize-icons 26)
-  
-  (defun treemacs-visit-node-and-close (&optional arg)
-    "Visit node and hide treemacs window."
-    (funcall-interactively treemacs-default-visit-action arg)
-    (treemacs))
+;; (use-package treemacs
+;;   :after projectile
+;;   :bind (:map global-map ("M-²" . 'aw-flip-window)))
+;;   :config
+;;   (setq treemacs-add-and-display-current-project t)
+;;   (setq treemacs-display-current-project-exclusively t)
+;;   (setq aw-ignored-buffers (delq 'treemacs-mode aw-ignored-buffers))
+;;   (treemacs-resize-icons 26)
+;;   ;; (treemacs-define-RET-action 'file-node-closed 'treemacs-visit-node-and-close)
+;;   (add-to-list 'treemacs-pre-file-insert-predicates #'treemacs-is-file-git-ignored?)
+;;   (setq treemacs-read-string-input 'from-minibuffer)
 
-  (treemacs-define-RET-action 'file-node-closed 'treemacs-visit-node-and-close)
-  (add-to-list 'treemacs-pre-file-insert-predicates #'treemacs-is-file-git-ignored?)
-  (setq treemacs-read-string-input 'from-minibuffer)
+;;   (defun treemacs-ignore-example (filename absolute-path)
+;;     (or (string-match-p (regexp-quote "node_modules") absolute-path)))
 
-  (defun treemacs-ignore-example (filename absolute-path)
-    (or (string-match-p (regexp-quote "node_modules") absolute-path)))
-
-  (add-to-list 'treemacs-ignored-file-predicates #'treemacs-ignore-example)
+;;   (add-to-list 'treemacs-ignored-file-predicates #'treemacs-ignore-example)
 
 (use-package treemacs-magit
   :after treemacs magit)
 
 (use-package treemacs-projectile
-  :after treemacs projectile)
+  :after treemacs projectile
+  :hook (projectile-after-switch-project
+	 . (lambda ()
+	     (treemacs-display-current-project-exclusively))))
 
 (use-package typescript-mode)
 
@@ -302,7 +376,12 @@
 
 (use-package vterm-toggle
   :after vterm
-  :config (global-set-key (kbd "M-&") 'vterm-toggle))
+  :config
+  (global-set-key (kbd "M-&") 'vterm-toggle)
+  (setq vterm-toggle-fullscreen-p nil)
+  (add-to-list 'display-buffer-alist
+	       '((lambda(bufname _) (with-current-buffer bufname (equal major-mode 'vterm-mode)))
+		 (display-buffer-reuse-window display-buffer-same-window))))
 
 (use-package web-mode
   :mode (("\\.js\\'" . web-mode)

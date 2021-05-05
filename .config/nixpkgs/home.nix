@@ -8,11 +8,16 @@
     stateVersion = "21.05";
 
     packages = [
+      pkgs.ghcid
+      pkgs.haskellPackages.hspec-discover
       pkgs.haskellPackages.implicit-hie
       pkgs.iosevka-bin
       pkgs.libvterm
       pkgs.multimarkdown
+      pkgs.ngrok
+      pkgs.nodejs
       pkgs.ormolu
+      pkgs.ripgrep
       pkgs.yadm
     ];
 
