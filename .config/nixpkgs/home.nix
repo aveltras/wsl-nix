@@ -11,13 +11,20 @@
       pkgs.ghcid
       pkgs.haskellPackages.hspec-discover
       pkgs.haskellPackages.implicit-hie
+      pkgs.ibm-plex
       pkgs.iosevka-bin
       pkgs.libvterm
+      pkgs.mongodb
       pkgs.multimarkdown
+      pkgs.ncat
       pkgs.ngrok
       pkgs.nodejs
       pkgs.ormolu
+      # pkgs.pcre
+      # pkgs.pcre.dev
+      # pkgs.pkg-config
       pkgs.ripgrep
+      pkgs.robo3t
       pkgs.yadm
     ];
 
@@ -51,7 +58,7 @@
         grep = "grep --color=auto";
         fgrep = "fgrep --color=auto";
         egrep = "egrep --color=auto";
-        ll = "ls -l";
+        ll = "ls -lAXGhv --group-directories-first";
       };
     };
 

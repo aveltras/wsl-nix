@@ -42,11 +42,13 @@
 (global-auto-revert-mode)
 ;; (global-tab-line-mode)
 
-(add-to-list 'default-frame-alist '(font . "Iosevka-16"))
+(add-to-list 'default-frame-alist '(font . "IBM Plex Mono-14"))
 (setq-default left-margin-width 1 right-margin-width 1)
 (setq-default line-spacing 5)
 (setq header-line-format " ")
 (setq dired-listing-switches "-lAXGhv --group-directories-first")
+;; (setq tab-always-indent 'complete)
+(setq visible-bell 1)
 
 (setq project-switch-commands
       '((magit-project-status "Magit" nil)
@@ -60,7 +62,7 @@
 (global-set-key (kbd "C-x \"") 'split-window-horizontally)
 (global-set-key (kbd "C-x &") 'delete-other-windows)
 (global-set-key (kbd "C-x à") 'delete-window)
-(global-set-key (kbd "C-x b") 'counsel-switch-buffer)
+(global-set-key (kbd "M-o") 'other-window)
 
 (when (fboundp 'windmove-default-keybindings)
   (windmove-default-keybindings))
@@ -80,30 +82,18 @@
   (dired-subtree-toggle)
   (revert-buffer))
 
-(defun my/treemacs-back-and-forth ()
+(defun my/pop-local-mark-ring ()
   (interactive)
-  (if (treemacs-is-treemacs-window-selected?)
-      (progn
-	(aw-flip-window)
-	(treemacs))
-    (treemacs-select-window)))
+  (set-mark-command t))
 
-(defun my/treemacs-visit-node-and-close (&optional arg)
-  "Visit node and hide treemacs window."
-  (funcall-interactively treemacs-default-visit-action arg)
-  (treemacs))
+(defun my/dired-find-file ()
+  (interactive)
+  (let ((default-directory (dired-current-directory)))
+    (ido-find-file)))
 
 (global-set-key (kbd "C-<tab>") 'my/switch-to-last-buffer)
-
-(defcustom tab-line-tab-min-width 10
-  "Minimum width of a tab in characters."
-  :type 'integer
-  :group 'tab-line)
-
-(defcustom tab-line-tab-max-width 30
-  "Maximum width of a tab in characters."
-  :type 'integer
-  :group 'tab-line)
+(global-set-key (kbd "C-<home>") 'pop-global-mark)
+(global-set-key (kbd "<home>") 'my/pop-local-mark-ring)
 
 ;; Third party packages
 
@@ -111,92 +101,55 @@
 
 (use-package all-the-icons
   :if (display-graphic-p)
+  
   :config
   (unless (find-font (font-spec :name "all-the-icons"))
     (all-the-icons-install-fonts t)))
 
-(use-package all-the-icons-ivy-rich
-  :init (all-the-icons-ivy-rich-mode 1))
+(use-package all-the-icons-dired
+  :hook (dired-mode . all-the-icons-dired-mode))
 
-(use-package company
-  :hook (after-init . global-company-mode)
-  :config (setq company-minimum-prefix-length 1
-		company-idle-delay 0.0))
-
-(use-package company-box
-  :hook (company-mode . company-box-mode))
-
-(use-package company-prescient
-  :after company prescient
-  :config (company-prescient-mode))
-
-(use-package counsel
+(use-package consult
+  :bind (("C-x b" . consult-buffer)
+	 ("M-s r" . consult-ripgrep)
+	 ("M-s l" . consult-line)
+	 ("M-s i" . consult-imenu)
+	 ("M-g g" . consult-goto-line))
+  :init
+  (setq xref-show-xrefs-function #'consult-xref
+        xref-show-definitions-function #'consult-xref)
   :config
-  (ivy-mode 1)
-  (global-set-key (kbd "C-s") 'swiper-isearch)
-  (global-set-key (kbd "M-x") 'counsel-M-x)
-  (global-set-key (kbd "C-x C-f") 'counsel-find-file)
-  (global-set-key (kbd "C-h f") 'counsel-describe-function)
-  (global-set-key (kbd "C-h v") 'counsel-describe-variable)
-  (global-set-key (kbd "C-h l") 'counsel-find-library)
-  (global-set-key (kbd "C-h i") 'counsel-info-lookup-symbol)
-  (global-set-key (kbd "C-h u") 'counsel-unicode-char)
-  (global-set-key (kbd "C-c C-r") 'ivy-resume)
-  (global-set-key (kbd "C-c n") 'counsel-fzf)
-  (global-set-key (kbd "C-c J") 'counsel-file-jump)
-  (setq ivy-use-virtual-buffers t)
-  (setq ivy-count-format "(%d/%d) "))
+  (setq consult-project-root-function #'projectile-project-root))
 
-(use-package counsel-projectile
-  :after projectile counsel
-  :bind ("C-M-²" . counsel-projectile-rg)
-  :config (counsel-projectile-mode 1))
+(use-package consult-flycheck
+  :after consult flycheck
+  :bind (:map flycheck-command-map
+              ("!" . consult-flycheck)))
 
-;; (use-package dante
-;;   :after haskell-mode
-;;   :commands 'dante-mode
-;;   :init
-;;   (setq dante-load-flags '("+c"
-;; 			   "-ferror-spans"
-;; 			   "-Wwarn=missing-home-modules"
-;;                            "-fno-diagnostics-show-caret"
-;;                            "-Wall"
-;; 			   "-fobject-code"
-;; 			   "-fbyte-code"
-;; 			   "-fno-break-on-exception"
-;; 			   "-fno-break-on-error"
-;;                            "-fdefer-typed-holes"
-;;                            "-fdefer-type-errors"))
-;;   (add-hook 'haskell-mode-hook 'flycheck-mode)
-;;   (add-hook 'haskell-mode-hook 'dante-mode)
-;;   :config
-;;   (flycheck-add-next-checker 'haskell-dante '(info . haskell-hlint)))
+(use-package consult-lsp
+  :after consult lsp-mode
+  :bind ("M-²" . consult-lsp-symbols))
+
+(use-package corfu
+  ;; :config (global-set-key (kbd "M-i") 'corfu-complete)
+  ;; :bind (:map corfu-map
+	      ;; ("M-i" . corfu-complete))
+  :config
+  (corfu-global-mode)
+  (setq corfu-cycle t))
+
+(use-package ctrlf
+  :config
+  (ctrlf-mode +1))
 
 (use-package dired-filter)
 
 (use-package dired-subtree
   :bind (:map dired-mode-map
-	      ("<tab>" . 'my/dired-subtree-toggle)))
-
-;; (use-package direnv
-;;   :config (direnv-mode))
-
-(use-package doom-themes
+	      ("<tab>" . 'my/dired-subtree-toggle)
+	      ("C-x C-f" . my/dired-find-file))
   :config
-  ;; Global settings (defaults)
-  (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
-	doom-themes-enable-italic nil) ; if nil, italics is universally disabled
-
-  ;; Enable flashing mode-line on errors
-  (doom-themes-visual-bell-config)
-  (setq doom-themes-treemacs-enable-variable-pitch nil)
-
-  ;; (setq doom-themes-treemacs-theme "doom-colors") ; use the colorful treemacs theme
-  ;; (doom-themes-treemacs-config)
-  ;; (setq doom-gruvbox-dark-variant "soft")
-  (load-theme 'doom-miramare t)
-  ;; Corrects (and improves) org-mode's native fontification.
-  (doom-themes-org-config))
+  (setq dired-subtree-use-backgrounds nil))
 
 (use-package doom-modeline
   :hook (after-init . doom-modeline-mode)
@@ -207,15 +160,21 @@
   (setq doom-modeline-height 18)
   (setq doom-modeline-lsp t))
 
+(use-package embark
+  :bind (("C-S-a" . embark-act)
+	 ("C-h B" . embark-bindings))
+  :init (setq prefix-help-command #'embark-prefix-help-command))
+
+(use-package embark-consult
+  :after consult embark
+  :demand t
+  :hook (embark-collect-mode . embark-consult-preview-minor-mode))
+
 (use-package emmet-mode
   :hook (web-mode css-mode html-mode))
 
 (use-package envrc
   :init (envrc-global-mode))
-
-;; (use-package exec-path-from-shell
-;;   :config
-;;   (exec-path-from-shell-initialize))
 
 (use-package expand-region
   :bind (("C-+" . er/contract-region)
@@ -223,54 +182,22 @@
 
 (use-package flycheck)
 
+(use-package forge
+  :after magit)
+
 (use-package graphql-mode)
 
 (use-package haskell-mode
   :config (setq haskell-process-type 'ghci))
 
-;; (use-package ivy-posframe
-;;   :config
-;;   (setq ivy-posframe-display-functions-alist '((t . ivy-posframe-display-at-frame-bottom-left)))
-;;   (ivy-posframe-mode 1))
-
-(use-package ivy-prescient
-  :after counsel prescient
-  :config
-  (setq ivy-prescient-sort-commands '(:not swiper
-                                           swiper-isearch
-                                           counsel-imenu
-                                           ivy-switch-buffer
-                                           lsp-ivy-workspace-symbol
-                                           ivy-resume
-                                           ivy--restore-session
-                                           counsel-switch-buffer))
-  (ivy-prescient-mode))
-
-(use-package ivy-rich
-  :init (ivy-rich-mode 1))
-
 (use-package json-mode
   :config (setq js-indent-level 2))
-
-(use-package ligature
-  :straight '(ligature :type git :host github :repo "mickeynp/ligature.el")
-  :config
-  (ligature-set-ligatures 't '("www"))
-  (ligature-set-ligatures 'prog-mode '("<--" "<---" "<<-" "<-" "<->" "->" "->>" "-->" "--->"
-				       "<!--" "-<<" "-<" "-<-" "->-" ">-" ">>-" "<-->" "<--->"
-				       "<---->" "<==" "<===" "<<=" "<=" "<=>" "=>" "=>>" "==>"
-				       "===>" "<!---" "=<<" "=<" "=<=" "=>=" ">=" ">>=" "<==>"
-				       "<===>" "<====>" "<-------" "------->" "<======>" "<~~"
-				       "<~" "~>" "~~>" "\\/" "/\\" "==" "!=" "/=" "~=" "<>"
-				       "===" "!==" "=/=" "=!=" ":=" ":-" ":+" "<*" "<*>" "*>"
-				       "<|" "<|>" "|>" "+:" "-:" "=:" "::" ":::" "<." "<.>"
-				       ".>" "(*" "*)" ":>" "++" "+++" "|-" "-|"))
-  (global-ligature-mode t))
 
 (use-package lsp-haskell
   :hook
   (haskell-mode . lsp)
   (haskell-literate-mode . lsp)
+  (haskell-cabal-mode . cabal-fmt-on-save-mode)
   :config
   (setq lsp-haskell-formatting-provider "ormolu")
   (setq lsp-haskell-server-path "haskell-language-server-wrapper")
@@ -294,18 +221,15 @@
   (lsp-ui-sideline-show-hover t)
   (lsp-ui-doc-enable nil))
 
-(use-package lsp-treemacs
-  :after lsp-mode
-  :bind ("C-!" . lsp-treemacs-errors-list)
-  :config (lsp-treemacs-sync-mode 1))
-
-(use-package lsp-ivy
-  :after counsel
-  :bind ("M-²" . lsp-ivy-workspace-symbol)
-  :commands lsp-ivy-workspace-symbol)
-
 (use-package magit
-  :config (global-set-key (kbd "C-x g") 'magit-status))
+  :hook (magit-mode . (lambda()
+			(local-unset-key (kbd "<C-tab>"))))
+  :config
+  (global-set-key (kbd "C-x g") 'magit-status)
+  (setq magit-display-buffer-function 'magit-display-buffer-fullframe-status-v1))
+
+(use-package marginalia
+  :config (marginalia-mode))
 
 (use-package markdown-mode
   :mode (("README\\.md\\'" . gfm-mode)
@@ -314,10 +238,11 @@
   :init (setq markdown-command "multimarkdown"))
 
 (use-package nix-mode
+  :hook (nix-mode . nixpkgs-fmt-on-save-mode)
   :mode "\\.nix\\'")
 
-(use-package prescient
-  :config (prescient-persist-mode))
+(use-package orderless
+  :custom (completion-styles '(orderless)))
 
 (use-package projectile
   :config
@@ -327,11 +252,36 @@
 
 (use-package rainbow-mode)
 
+(use-package reformatter
+  :config
+  (reformatter-define cabal-fmt
+    :program "cabal-fmt"
+    :lighter " CabalFmt")
+  (reformatter-define nixpkgs-fmt
+    :program "nixpkgs-fmt"
+    :lighter " NixpkgsFmt")
+  (reformatter-define prettier-fmt-js
+    :program "prettier"
+    :args (list "--stdin-filepath" "file.js")
+    :lighter " PrettierFmtJs")
+  (reformatter-define prettier-fmt-tsx
+    :program "prettier"
+    :args (list "--stdin-filepath" "file.tsx")
+    :lighter " PrettierFmtTsx")
+  (reformatter-define prettier-fmt-css
+    :program "prettier"
+    :args (list "--stdin-filepath" "file.css")
+    :lighter " PrettierFmtCss")
+  )
+
 (use-package restclient)
 
 (use-package rustic
   :config
   (setq rustic-format-on-save t))
+
+(use-package savehist
+  :init (savehist-mode))
 
 (use-package sql-indent
   :hook (sql-mode . sqlind-minor-mode))
@@ -341,47 +291,21 @@
 
 (use-package terraform-mode)
 
-;; (use-package treemacs
-;;   :after projectile
-;;   :bind (:map global-map ("M-²" . 'aw-flip-window)))
-;;   :config
-;;   (setq treemacs-add-and-display-current-project t)
-;;   (setq treemacs-display-current-project-exclusively t)
-;;   (setq aw-ignored-buffers (delq 'treemacs-mode aw-ignored-buffers))
-;;   (treemacs-resize-icons 26)
-;;   ;; (treemacs-define-RET-action 'file-node-closed 'treemacs-visit-node-and-close)
-;;   (add-to-list 'treemacs-pre-file-insert-predicates #'treemacs-is-file-git-ignored?)
-;;   (setq treemacs-read-string-input 'from-minibuffer)
-
-;;   (defun treemacs-ignore-example (filename absolute-path)
-;;     (or (string-match-p (regexp-quote "node_modules") absolute-path)))
-
-;;   (add-to-list 'treemacs-ignored-file-predicates #'treemacs-ignore-example)
-
-(use-package treemacs-magit
-  :after treemacs magit)
-
-(use-package treemacs-projectile
-  :after treemacs projectile
-  :hook (projectile-after-switch-project
-	 . (lambda ()
-	     (treemacs-display-current-project-exclusively))))
+(use-package tide
+  :after typescript-mode flycheck
+  :hook ((typescript-mode . tide-setup)
+	 (typescript-mode . tide-hl-identifier-mode)
+	 (before-save . tide-format-before-save)))
 
 (use-package typescript-mode)
 
 (use-package undo-tree
   :init (global-undo-tree-mode))
 
-(use-package vterm)
-
-(use-package vterm-toggle
-  :after vterm
-  :config
-  (global-set-key (kbd "M-&") 'vterm-toggle)
-  (setq vterm-toggle-fullscreen-p nil)
-  (add-to-list 'display-buffer-alist
-	       '((lambda(bufname _) (with-current-buffer bufname (equal major-mode 'vterm-mode)))
-		 (display-buffer-reuse-window display-buffer-same-window))))
+(use-package vertico
+  :init
+  (vertico-mode)
+  (setq vertico-cycle t))
 
 (use-package web-mode
   :mode (("\\.js\\'" . web-mode)
@@ -390,9 +314,15 @@
 	 ("\\.tsx\\'" . web-mode)
 	 ("\\.hbs\\'" . web-mode)
 	 ("\\.html\\'" . web-mode))
-  :hook (web-mode . (lambda ()
-		      (when (string-equal "tsx" (file-name-extension buffer-file-name))
-			(tide-setup))))
+  :hook
+  (css-mode . prettier-fmt-css-on-save-mode)
+  (web-mode . (lambda ()
+		(when (string-equal "tsx" (file-name-extension buffer-file-name))
+		  (tide-setup))))
+    (web-mode . (lambda ()
+		(when (string-equal "tsx" (file-name-extension buffer-file-name))
+		  (prettier-fmt-tsx-on-save-mode))))
+  ;; (web-mode . prettier-fmt-js-on-save-mode)
   :commands web-mode
   :config
   (setq web-mode-markup-indent-offset 2)
@@ -413,3 +343,5 @@
 (use-package yasnippet
   :hook (prog-mode . yas-minor-mode)
   :config (yas-reload-all))
+
+(use-package yasnippet-snippets)
