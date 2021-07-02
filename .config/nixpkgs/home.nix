@@ -1,6 +1,13 @@
 { config, pkgs, ... }:
 
+let
+  githubTarball = owner: repo: rev:
+    builtins.fetchTarball { url = "https://github.com/${owner}/${repo}/archive/${rev}.tar.gz"; };
+  nixpkgs2009 = import (githubTarball "NixOS" "nixpkgs" "20.09") {};
+in
 {
+  nixpkgs.config.allowUnfree = true;
+  
   home = {
     username = "romain";
     homeDirectory = "/home/romain";
@@ -8,18 +15,25 @@
     stateVersion = "21.05";
 
     packages = [
+      pkgs.awscli
+      # nixpkgs2009.bazel
+      pkgs.bazel
       pkgs.ghcid
       pkgs.haskellPackages.hspec-discover
       pkgs.haskellPackages.implicit-hie
+      pkgs.httplz
       pkgs.ibm-plex
       pkgs.iosevka-bin
       pkgs.libvterm
+      pkgs.kibana7
       pkgs.mongodb
       pkgs.multimarkdown
       pkgs.ncat
       pkgs.ngrok
       pkgs.nodejs
+      pkgs.openjdk11
       pkgs.ormolu
+      pkgs.patchelf
       # pkgs.pcre
       # pkgs.pcre.dev
       # pkgs.pkg-config

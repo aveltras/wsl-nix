@@ -42,7 +42,7 @@
 (global-auto-revert-mode)
 ;; (global-tab-line-mode)
 
-(add-to-list 'default-frame-alist '(font . "IBM Plex Mono-14"))
+(add-to-list 'default-frame-alist '(font . "IBM Plex Mono-16"))
 (setq-default left-margin-width 1 right-margin-width 1)
 (setq-default line-spacing 5)
 (setq header-line-format " ")
@@ -109,6 +109,8 @@
 (use-package all-the-icons-dired
   :hook (dired-mode . all-the-icons-dired-mode))
 
+(use-package bazel)
+
 (use-package consult
   :bind (("C-x b" . consult-buffer)
 	 ("M-s r" . consult-ripgrep)
@@ -160,6 +162,10 @@
   (setq doom-modeline-height 18)
   (setq doom-modeline-lsp t))
 
+(use-package doom-themes
+  :config
+  (load-theme 'doom-shades-of-purple t))
+
 (use-package embark
   :bind (("C-S-a" . embark-act)
 	 ("C-h B" . embark-bindings))
@@ -185,6 +191,10 @@
 (use-package forge
   :after magit)
 
+;; (use-package git-gutter
+;;   :config
+;;   (global-git-gutter-mode t))
+
 (use-package graphql-mode)
 
 (use-package haskell-mode
@@ -193,15 +203,15 @@
 (use-package json-mode
   :config (setq js-indent-level 2))
 
-(use-package lsp-haskell
-  :hook
-  (haskell-mode . lsp)
-  (haskell-literate-mode . lsp)
-  (haskell-cabal-mode . cabal-fmt-on-save-mode)
-  :config
-  (setq lsp-haskell-formatting-provider "ormolu")
-  (setq lsp-haskell-server-path "haskell-language-server-wrapper")
-  (setq lsp-haskell-process-args-hie '()))
+;; (use-package lsp-haskell
+;;   :hook
+;;   (haskell-mode . lsp)
+;;   (haskell-literate-mode . lsp)
+;;   (haskell-cabal-mode . cabal-fmt-on-save-mode)
+;;   :config
+;;   (setq lsp-haskell-formatting-provider "ormolu")
+;;   (setq lsp-haskell-server-path "haskell-language-server-wrapper")
+;;   (setq lsp-haskell-process-args-hie '()))
 
 (use-package lsp-mode
   :commands (lsp lsp-deferred)
@@ -236,6 +246,10 @@
          ("\\.md\\'" . markdown-mode)
          ("\\.markdown\\'" . markdown-mode))
   :init (setq markdown-command "multimarkdown"))
+
+(use-package multiple-cursors
+  :config
+  (global-set-key (kbd "C-S-c C-S-c") 'mc/edit-lines))
 
 (use-package nix-mode
   :hook (nix-mode . nixpkgs-fmt-on-save-mode)
