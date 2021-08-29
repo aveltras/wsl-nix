@@ -6,7 +6,14 @@ let
   nixpkgs2009 = import (githubTarball "NixOS" "nixpkgs" "20.09") {};
 in
 {
-  nixpkgs.config.allowUnfree = true;
+  nixpkgs = {
+    config.allowUnfree = true;
+    overlays = [
+      (import (builtins.fetchTarball {
+        url = https://github.com/nix-community/emacs-overlay/archive/master.tar.gz;
+      }))
+    ];
+  };
   
   home = {
     username = "romain";
@@ -16,29 +23,14 @@ in
 
     packages = [
       pkgs.awscli
-      # nixpkgs2009.bazel
-      pkgs.bazel
-      pkgs.ghcid
-      pkgs.haskellPackages.hspec-discover
-      pkgs.haskellPackages.implicit-hie
-      pkgs.httplz
+      pkgs.aws-iam-authenticator
+      pkgs.fantasque-sans-mono
+      pkgs.fira-code
       pkgs.ibm-plex
       pkgs.iosevka-bin
-      pkgs.libvterm
-      pkgs.kibana7
-      pkgs.mongodb
       pkgs.multimarkdown
-      pkgs.ncat
       pkgs.ngrok
-      pkgs.nodejs
-      pkgs.openjdk11
-      pkgs.ormolu
-      pkgs.patchelf
-      # pkgs.pcre
-      # pkgs.pcre.dev
-      # pkgs.pkg-config
       pkgs.ripgrep
-      pkgs.robo3t
       pkgs.yadm
     ];
 
@@ -84,10 +76,13 @@ in
     direnv = {
       enable = true;
       enableBashIntegration = true;
-      enableNixDirenvIntegration = true;
+      nix-direnv.enable = true;
     };
 
-    emacs.enable = true;
+    emacs = {
+      enable = true;
+      # package = pkgs.emacsGcc;
+    };
 
     git = {
       enable = true;
