@@ -116,6 +116,9 @@
 
 (use-package bazel)
 
+;; (use-package chocolate-theme
+;;   :config (load-theme 'chocolate t))
+
 (use-package consult
   :bind (("C-x b" . consult-buffer)
 	 ("M-s r" . consult-ripgrep)
